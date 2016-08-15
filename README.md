@@ -52,6 +52,8 @@
 ##编译日志：
 
 #初始化一个编译环境
+
+```bash
 export myroot=/data/chroot/houstack
 mkdir /data/chroot/houstack
 mkdir -p $myroot/var/lib/rpm
@@ -80,9 +82,12 @@ chmod 777 $d/tmp
 
 groupadd houstack
 useradd houstack -g houstack -m
+```
 
 # fastdfs
 我们编译出无依赖的fastdfs，然后cp到我们的$d/bin目录就可以了。但是中间需要调整几个参数。因为./make.sh是写死的
+
+```bash
 //TODO:fork一个出来改成./configure模式编译
 sd
 unzip libfastcommon.zip
@@ -118,9 +123,11 @@ vi common/Makefile
 mkdir $d/bin
 cp /usr/bin/fdfs_* $d/bin
 cp /etc/fdfs/* $d/etc/fastdfs/
+```
 
 # openresty
 
+```bash
 //警惕.so是否编译成功
 sd
 tar xf openssl-1.0.2h.tar.gz
@@ -179,9 +186,11 @@ c  \
 --http-uwsgi-temp-path=$d/tmp/nginx-uwsgi-temp \
 --http-scgi-temp-path=$d/tmp/nginx-scgi-temp \
 &&m && sd
-
+```
 
 # mysql
+
+```bash
 tar xf boost_1_59_0.tar.gz
 tarmake ncurses-6.0.tar.gz --with-shared
 
@@ -224,9 +233,11 @@ rm -f CMakeCache.txt && cmake . \
 
 m
 sd
+```
 
 # php
 
+```bash
 tar xf openresty-1.9.15.1.tar.gz
 cd openresty-1.9.15.1
 
@@ -300,14 +311,20 @@ tarmake libmemcached-1.0.18.tar.gz
 phpmake php-memcached-php7 "--with-zlib-dir=$d --disable-memcached-sasl"
 tar xf phpredis-3.0.0.tar.gz
 phpmake phpredis-3.0.0
+```
 
 # memcache
+
+```bash
 
 tarmake libevent-2.0.22-stable.tar.gz
 tarmake memcached-1.4.29.tar.gz
 
+```
 
 # redis
+
+```bash
 
 unset CXXFLAGS
 unset CFLAGS
@@ -319,9 +336,10 @@ cd redis-3.2.1
 make -j96 PREFIX=$d install
 source ~/.bashrc
 sd
-
+```
 
 # 其他工具
+```bash
 tar xf ntp-4.2.8p8.tar.gz
 cd ntp-4.2.8p8
 LDFLAGS="$LDFLAGS -ldl" && c && m
@@ -340,11 +358,11 @@ c && make -j96 && make install && sd
 
 
 tarmake sqlite-autoconf-3130000.tar.gz
-
+```
 
 #配置etc目录
 tmp目录存放pid、sock和各种临时文件。最后可以直接丢弃，不用迁移。
-
+```bash
 fastdfs
 
 mysql初始化
@@ -352,8 +370,10 @@ mysqld --no-defaults --explicit_defaults_for_timestamp --initialize  --datadir=$
 chown -R houstack:houstack $d/{data,log}
 
 tar czfv houstack-0.0.1.tar.gz houstack/{app,bin,data,etc,lib,log,lua*,nginx,php,pod,sbin,share,tmp,var}
-
+```
 #部署
+```bash
+
 curl http://192.168.50.24:9999/houstack-0.0.1.tar.gz|tar xzfv -
 groupadd houstack
 useradd houstack -g houstack -m
@@ -369,3 +389,15 @@ fdfs_trackerd /opt/houstack/etc/fastdfs/tracker.conf
 fdfs_storaged /opt/houstack/etc/fastdfs/storage.conf
 mysqld_safe --defaults-file=/opt/houstack/etc/mysql/my.cnf &
 
+```
+
+#rc.local
+chmod +x /etc/rc.d/rc.local
+```bash
+/opt/houstack/bin/nginx
+/opt/houstack/sbin/php-fpm
+/opt/houstack/bin/redis-server /opt/houstack/etc/redis/redis.conf
+/opt/houstack/bin/fdfs_trackerd /opt/houstack/etc/fastdfs/tracker.conf
+/opt/houstack/bin/fdfs_storaged /opt/houstack/etc/fastdfs/storage.conf
+/opt/houstack/bin/mysqld_safe --defaults-file=/opt/houstack/etc/mysql/my.cnf &
+```
